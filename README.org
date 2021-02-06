@@ -1,0 +1,111 @@
+* libre2d
+
+Open source implementation of Live2D.
+
+This project aims to reimplement similar functionality to what Live2D
+provides, but completely open source.
+
+libre2d is a clean room design, and thus Live2D code must not be studied nor
+reverse-engineered.
+
+** Dependencies
+
+- C++ toolchain {g++, clang}
+- meson (>= 0.53), ninja-build, pkg-config
+- qtbase5-dev libqt5core5a libqt5gui5 libqt5widgets5 qttools5-dev-tools libtiff-dev
+
+** Design plan
+
+In a nutshell, libre2d will achieve layered anime-like 2D graphics animation
+by using similar techniques to 3D animation. An API diagram with our plans
+will be created soon, but in the meantime, here is a text-based description
+of our planned design.
+
+A Mesh is defined as a vector of vertices, so there is an index associated to
+every vertex. The Mesh also contains a vector of triangles, which are indexes
+into the vertex vector, for the purpose of matching triangles to UV mapping
+for textures at the rendering stage. The Mesh also contains a center point of
+transformation. This is the point that will be used as the origin for
+rotation, scaling, and interpolation transformations. This origin point also
+allows rotation, scaling, and translation to be commutative operations.
+
+There are four transformation operations that are defined on a Mesh:
+rotation, scaling, translation, and interpolation. The first three should be
+self-explanatory, and take an angle, scale factor, and translation vector as
+parameters, respectively. Interpolation is the key transformation function
+for libre2d, and takes two meshes and a factor [0, 1] as an input. The two
+meshes serve as endpoint meshes, and the factor determines the "distance" at
+which we should interpolate. The two endpoint meshes must have an equal
+number of vertices, and the corresponding vertices must have the same index
+in the two meshes. For every vertex in the first mesh, we draw an imaginary
+line to the same vertex in the second mesh, and output the vertex that is on
+the line at a normalized distance determined by the factor. This means that
+if factor is 0, then the output will be equal to the first mesh, and if the
+factor is 1, then the output will be equal to the second mesh.
+
+A KeyFrame groups a Mesh with anchor points. Anchor points are vertices that
+correspond to center points of child Meshes.
+
+A Component groups a KeyFrame with a UV map, children Components, and
+Parameters. The anchor points of the KeyFrame are used to determine the
+position of children Components. There must be an equal number of children
+Components as the number of anchor points.
+
+A Parameter contains information for transforming one or more KeyFrames. It
+contains the minimum, maximum, and default values. When the transformation is
+interpolation, these values will be Meshes. We are still debating whether the
+Parameter should be stateful or stateless.
+
+A Model groups all of these together, by containing the the tree of
+Components. It walks the tree of Components to extract the Parameters, and
+consolidates Parameters that are present in multiple Components. The Model
+then exposes this consolidated list of Parameters. A render function will
+also be exposed, though we are still debating on the exact API; whether the
+user should submit a buffer and connect a callback, or call render()
+synchronously with a buffer. Parameters will be set in a breadth-first
+fashion, and interpolation will be applied before any of the other
+transformations.
+
+An application that allows a user to view the Model should provide some
+interface to set the Parameters, and then some loop to call render().
+
+Parameters that compete will simply be resolved by interpolation. For
+example, if we image a character's face mesh and we have a parameter for
+facing in the X direction and another parameter for facing in the Y
+direction, to transform the face mesh to face diagonally, we can simply
+interpolate between the X transformation and the Y transformation (This has
+not been tested, only experimented with mentally).
+
+To render the Model, we are debating between a synchronous option, and an
+asynchronous option. The synchronous way we would set all the parameters (in
+which case Parameter needs to be stateful), and then call Model::render(),
+and provide a buffer. The drawback of this is that we would block during the
+render(), but the upside is that the libre2d implementation is simpler as we
+don't have to deal with threads (we can let the application deal with it).
+The asynchronous way we would call Model::render() and provide all the
+parameters along with a buffer, and connect a callback function to be called
+after the render is complete.
+
+For the rendering we expect to use OpenGL, as doing UV mapping with textures
+on CPU probably isn't good (if it's feasible we can add that as an option).
+
+After this is done we need to implement a graphical application for editing
+and viewing, and finally a face tracker that we can connect to the viewer.
+
+** Contributing
+
+So far only Paul is working on this, in the paul/dev branch, until he is
+satisfied with the quality of the functionality implemented there, at which
+point it will be merged to master. That branch cannot be expected to be
+stable, but will be the most cutting edge of the current development.
+
+Feel free to open any issues or pull requests for discussions.
+
+We use a coding style similar to the Linux kernel, with C++ extensions, which
+is the same as what libcamera uses:
+https://libcamera.org/coding-style.html#coding-style-guidelines
+
+Although we would like to use IRC and email for communication, we have
+decided to experiment with some popular web-based applications, so we will
+be using discord for communication. Join the discord server here:
+https://discord.gg/6ySvMzBAvS
