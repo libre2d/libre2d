@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 libre2d_sources = files([
+    'geometry.cpp',
 ])
 
 libre2d_sources += libre2d_public_headers

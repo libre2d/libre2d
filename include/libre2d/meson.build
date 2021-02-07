@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 libre2d_public_headers = files([
+    'geometry.h',
 ])
 
 include_dir = join_paths(libre2d_include_dir, 'libre2d')
