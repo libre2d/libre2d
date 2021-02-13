@@ -8,10 +8,13 @@
 #ifndef __LIBRE2D_GEOMETRY_H__
 #define __LIBRE2D_GEOMETRY_H__
 
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
 namespace libre2d {
+
+const double PI = std::acos(-1);
 
 class Vertex
 {
@@ -21,17 +24,16 @@ public:
 	{
 	}
 
-	constexpr Vertex(int32_t xpos, int32_t ypos)
+	constexpr Vertex(float xpos, float ypos)
 		: x(xpos), y(ypos)
 	{
 	}
 
-	int32_t x;
-	int32_t y;
-
-	void translate(int32_t dx, int32_t dy);
-	void scale(const Vertex &origin, float mx, float my);
+	float x;
+	float y;
 };
+
+typedef Vertex Vector;
 
 class Triangle
 {
@@ -44,14 +46,31 @@ public:
 	Vertex &v1;
 	Vertex &v2;
 	Vertex &v3;
-
-	void translate(int32_t dx, int32_t dy);
-	void scale(const Vertex &origin, float mx, float my);
 };
 
 class Mesh
 {
-	std::vector<Triangle> triangles;
+public:
+	Mesh() = default;
+	Mesh(std::vector<Vertex> &vec);
+
+	std::vector<Vertex> vertices;
+	Vertex center;
+
+	Mesh scale(float factor, const Vertex &origin) const;
+	void scaleInPlace(float factor, const Vertex &origin);
+
+	Mesh translate(const Vector &vec) const;
+	void translateInPlace(const Vector &vec);
+
+	Mesh rotate(float degree, const Vertex &origin) const;
+	void rotateInPlace(float degree, const Vertex &origin);
+
+	Mesh interpolate(const Mesh &other, float factor) const;
+	void interpolateInPlace(const Mesh &other, float factor);
+
+private:
+	Vertex calculateCenter(std::vector<Vertex> &vec);
 };
 
 } /* namespace libre2d */
