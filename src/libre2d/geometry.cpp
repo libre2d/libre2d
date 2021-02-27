@@ -52,6 +52,18 @@ namespace libre2d {
  * \brief The y coordinate of the Vertex
  */
 
+void Vertex::interpolateInPlace(const Vertex &other, float factor)
+{
+	x = (other.x - x) * factor + x;
+	y = (other.y - y) * factor + y;
+}
+
+Vertex Vertex::interpolate(const Vertex &other, float factor) const
+{
+	Vertex vertex = *this;
+	vertex.interpolateInPlace(other, factor);
+	return vertex;
+}
 
 /**
  * \class Triangle
