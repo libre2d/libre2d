@@ -9,6 +9,7 @@
 #define __LIBRE2D_COMPONENT_H__
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -34,14 +35,18 @@ public:
 		Continuous
 	};
 
+	struct ParameterInfo {
+		std::string name;
+		ParameterType type;
+		float defaultValue;
+		float min;
+		float max;
+	};
+
 	bool validate() const;
 	KeyFrame setParameter(float param) const;
 
-	std::string name;
-	ParameterType type;
-	float defaultValue;
-	float min;
-	float max;
+	std::shared_ptr<ParameterInfo> info;
 	std::map<float, KeyFrame> keyFrames;
 };
 
@@ -55,7 +60,7 @@ public:
 
 	std::string name;
 	// uv map
-	std::vector<Component *> children;
+	std::vector<Component> children;
 	std::map<std::string, Parameter> parameters;
 
 	KeyFrame currentFrame;

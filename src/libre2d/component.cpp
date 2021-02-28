@@ -96,17 +96,17 @@ bool Parameter::validate() const
 {
 	bool valid = true;
 
-	if (min > max) {
+	if (info->min > info->max) {
 		std::cerr << "ERROR Parameter: min is greater than max" << std::endl;
 		valid = false;
 	}
 	
-	if (keyFrames.find(min) == keyFrames.end()) {
+	if (keyFrames.find(info->min) == keyFrames.end()) {
 		std::cerr << "ERROR Parameter: no keyframe for min" << std::endl;
 		valid = false;
 	}
 
-	if (keyFrames.find(max) == keyFrames.end()) {
+	if (keyFrames.find(info->max) == keyFrames.end()) {
 		std::cerr << "ERROR Parameter: no keyframe for max" << std::endl;
 		valid = false;
 	}
@@ -126,11 +126,11 @@ bool Parameter::validate() const
  */
 KeyFrame Parameter::setParameter(float param) const
 {
-	if (param <= min)
-		return keyFrames.at(min);
+	if (param <= info->min)
+		return keyFrames.at(info->min);
 
-	if (param >= max)
-		return keyFrames.at(max);
+	if (param >= info->max)
+		return keyFrames.at(info->max);
 
 	const auto &lower = keyFrames.lower_bound(param);
 	const auto &upper  = keyFrames.upper_bound(param);
@@ -143,7 +143,7 @@ KeyFrame Parameter::setParameter(float param) const
 	float lowerDist = param - realLower->first;
 
 	/* Round for discrete (because we're using floats) */
-	if (type == Discrete) {
+	if (info->type == Discrete) {
 		float upperDist = upper->first - param;
 		if (upperDist > lowerDist)
 			return realLower->second;
@@ -198,12 +198,12 @@ void Component::setParameter(const std::string &paramName, float value)
 	currentFrame.interpolateInPlace(parameter->second.setParameter(value), 0.5);
 
 	/* \todo optimize: skip this if it's called from the vector setParameter() */
-	for (Component *child : children) {
-		const Vertex &anchor = currentFrame.anchors.at(child->name);
-		const KeyFrame &childFrame = child->currentFrame;
+	for (Component &child : children) {
+		const Vertex &anchor = currentFrame.anchors.at(child.name);
+		const KeyFrame &childFrame = child.currentFrame;
 		Vector transVec(anchor.x - childFrame.center.x,
 				anchor.y - childFrame.center.y);
-		child->currentFrame.translateInPlace(transVec);
+		child.currentFrame.translateInPlace(transVec);
 	}
 }
 
