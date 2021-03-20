@@ -51,6 +51,11 @@ void KeyFrame::interpolateInPlace(const KeyFrame &other, float factor)
 		pair.second.interpolateInPlace(other.anchors.at(pair.first), factor);
 }
 
+/* \todo implement this */
+void KeyFrame::translateInPlace([[maybe_unused]] const Vector &vec)
+{
+}
+
 /**
  * \class Parameter
  * \brief Describes a Parameter for a Component, and the KeyFrames
