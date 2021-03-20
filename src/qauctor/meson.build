@@ -1,12 +1,17 @@
 # SPDX-License-Identifier: CC0-1.0
 
-libre2d_editor_sources = files([
+qauctor_sources = files([
+    'main.cpp',
+    'main_window.cpp',
+    'canvas.cpp',
 ])
 
-libre2d_editor_moc_headers = files([
+qauctor_moc_headers = files([
+    'main_window.h',
+    'canvas.h',
 ])
 
-libre2d_editor_resources = files([
+qauctor_resources = files([
 ])
 
 qt5 = import('qt5')
@@ -17,19 +22,19 @@ qt5_dep = dependency('qt5',
                      version : '>= 5.4')
 
 if qt5_dep.found()
-    libre2d_editor_deps = [
+    qauctor_deps = [
         libre2d_dep,
         qt5_dep,
     ]
 
     qt5_cpp_args = [ '-DQT_NO_KEYWORDS' ]
 
-    resources = qt5.preprocess(moc_headers : libre2d_editor_moc_headers,
-                               qresources : libre2d_editor_resources,
+    resources = qt5.preprocess(moc_headers : qauctor_moc_headers,
+                               qresources : qauctor_resources,
                                dependencies : qt5_dep)
 
-    libre2d_editor = executable('libre2d_editor', libre2d_editor_sources, resources,
+    qauctor = executable('qauctor', qauctor_sources, resources,
                                 install : true,
-                                dependencies : libre2d_editor_deps,
+                                dependencies : qauctor_deps,
                                 cpp_args : qt5_cpp_args)
 endif
