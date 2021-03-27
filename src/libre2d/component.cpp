@@ -18,45 +18,6 @@
 namespace libre2d {
 
 /**
- * \class KeyFrame
- * \brief Describes a Mesh in an endpoint of a Parameter for a Component
- *
- * A KeyFrame is a grouping of a Mesh, a center of transformation, and a list
- * of anchor vertices. The KeyFrame describes a key point in a Parameter of a
- * Component, and designates the Mesh that the Component should be for the
- * given value of the Parameter.
- */
-
-/**
- * \var KeyFrame::mesh
- * \brief The Mesh that the KeyFrame represents
- */
-
-/**
- * \var KeyFrame::center
- * \brief The center Vertex of all transformation operations on the Mesh
- */
-
-/**
- * \var KeyFrame::anchors
- * \brief The anchor points for all children Meshes (for the Component)
- */
-
-void KeyFrame::interpolateInPlace(const KeyFrame &other, float factor)
-{
-	mesh.interpolateInPlace(other.mesh, factor);
-	center.interpolateInPlace(other.center, factor);
-
-	for (auto &pair : anchors)
-		pair.second.interpolateInPlace(other.anchors.at(pair.first), factor);
-}
-
-/* \todo implement this */
-void KeyFrame::translateInPlace([[maybe_unused]] const Vector &vec)
-{
-}
-
-/**
  * \class Parameter
  * \brief Describes a Parameter for a Component, and the KeyFrames
  *
@@ -75,6 +36,9 @@ void KeyFrame::translateInPlace([[maybe_unused]] const Vector &vec)
  * \brief The name of the parameter
  *
  * This is used to link with other parameters in the Model
+ *
+ * \todo figure out how to link rotation and scaling. add keyRotations and
+ * keyScaling vectors? not sure how order of operations will work.
  */
 
 /**
@@ -93,7 +57,7 @@ void KeyFrame::translateInPlace([[maybe_unused]] const Vector &vec)
  */
 
 /**
- * \var Parameter::keyFrames
+ * \var Parameter::keyMeshes
  * \brief The key values and key frames of the parameter
  */
 
@@ -106,12 +70,12 @@ bool Parameter::validate() const
 		valid = false;
 	}
 	
-	if (keyFrames.find(info->min) == keyFrames.end()) {
+	if (keyMeshes.find(info->min) == keyMeshes.end()) {
 		std::cerr << "ERROR Parameter: no keyframe for min" << std::endl;
 		valid = false;
 	}
 
-	if (keyFrames.find(info->max) == keyFrames.end()) {
+	if (keyMeshes.find(info->max) == keyMeshes.end()) {
 		std::cerr << "ERROR Parameter: no keyframe for max" << std::endl;
 		valid = false;
 	}
@@ -119,47 +83,6 @@ bool Parameter::validate() const
 	/* \todo check the number of vertices in all meshes and all anchor lists */
 
 	return valid;
-}
-
-/**
- * \brief Set the parameter value and output the resulting KeyFrame
- * \param[in] param The parameter value to set
- * \return The result KeyFrame from setting the parameter value. If the
- * value is out of range, it will be clamped.
- *
- * \todo confirm that copy elision works
- */
-KeyFrame Parameter::setParameter(float param) const
-{
-	if (param <= info->min)
-		return keyFrames.at(info->min);
-
-	if (param >= info->max)
-		return keyFrames.at(info->max);
-
-	const auto &lower = keyFrames.lower_bound(param);
-	const auto &upper  = keyFrames.upper_bound(param);
-
-	/* We have exact match */
-	if (lower != upper)
-		return lower->second;
-
-	const auto &realLower = std::prev(lower);
-	float lowerDist = param - realLower->first;
-
-	/* Round for discrete (because we're using floats) */
-	if (info->type == Discrete) {
-		float upperDist = upper->first - param;
-		if (upperDist > lowerDist)
-			return realLower->second;
-		return upper->second;
-	}
-
-	/* Interpolate for continuous */
-	float factor = lowerDist / (upper->first - realLower->first);
-	KeyFrame ret = realLower->second;
-	ret.interpolateInPlace(upper->second, factor);
-	return ret;
 }
 
 /**
@@ -186,12 +109,15 @@ bool Component::validate() const
 	/*
 	 * \todo validate the length of the children list with the anchor list
 	 * length of the KeyFrames in the Parameters
+	 * length of vertices in the meshes (recurse into parameter validation?)
 	 */
 	return true;
 }
 
-void Component::setParameter(const std::string &paramName, float value)
+void Component::setParameter(const std::string &paramName, [[maybe_unused]] float value)
 {
+	/* \todo implement this whole thing */
+
 	/* \todo optimize: skip this if it's called from the vector setParameter() */
 	auto parameter = parameters.find(paramName);
 	if (parameter == parameters.end()) {
@@ -200,15 +126,17 @@ void Component::setParameter(const std::string &paramName, float value)
 	}
 
 	/* \todo handle resetting the currentFrame */
-	currentFrame.interpolateInPlace(parameter->second.setParameter(value), 0.5);
+	//currentMesh.interpolateInPlace(parameter->second.setParameter(value), 0.5);
 
 	/* \todo optimize: skip this if it's called from the vector setParameter() */
+	/* \todo use convenience methods for these */
 	for (Component &child : children) {
-		const Vertex &anchor = currentFrame.anchors.at(child.name);
-		const KeyFrame &childFrame = child.currentFrame;
-		Vector transVec(anchor.x - childFrame.center.x,
-				anchor.y - childFrame.center.y);
-		child.currentFrame.translateInPlace(transVec);
+		const Vertex &anchor = currentMesh.vertices.at(currentMesh.anchors.at(child.name));
+		const Mesh &childMesh = child.currentMesh;
+		const Vertex &childCenter = childMesh.vertices.at(childMesh.center);
+		Vector transVec(anchor.x - childCenter.x,
+				anchor.y - childCenter.y);
+		child.currentMesh.translateInPlace(transVec);
 	}
 }
 

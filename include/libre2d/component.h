@@ -17,16 +17,6 @@
 
 namespace libre2d {
 
-struct KeyFrame
-{
-	Mesh mesh;
-	Vertex center;
-	std::map<std::string, Vertex> anchors;
-
-	void translateInPlace(const Vector &vec);
-	void interpolateInPlace(const KeyFrame &other, float factor);
-};
-
 class Parameter
 {
 public:
@@ -44,17 +34,16 @@ public:
 	};
 
 	bool validate() const;
-	KeyFrame setParameter(float param) const;
+	Mesh setParameter(float param) const;
 
 	std::shared_ptr<ParameterInfo> info;
-	std::map<float, KeyFrame> keyFrames;
+	std::map<float, Mesh> keyMeshes;
 };
 
 class Component
 {
 public:
 	// render
-	void setParameter(const std::string &paramName, float value);
 	void setParameter(const std::map<std::string, float> &params);
 	bool validate() const;
 
@@ -63,7 +52,10 @@ public:
 	std::vector<Component> children;
 	std::map<std::string, Parameter> parameters;
 
-	KeyFrame currentFrame;
+	Mesh currentMesh;
+
+private:
+	void setParameter(const std::string &paramName, float value);
 };
 
 } /* namespace libre2d */

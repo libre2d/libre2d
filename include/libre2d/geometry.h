@@ -8,8 +8,11 @@
 #ifndef __LIBRE2D_GEOMETRY_H__
 #define __LIBRE2D_GEOMETRY_H__
 
+#include <array>
 #include <cmath>
 #include <cstdint>
+#include <map>
+#include <string>
 #include <vector>
 
 namespace libre2d {
@@ -38,19 +41,6 @@ public:
 
 typedef Vertex Vector;
 
-class Triangle
-{
-public:
-	constexpr Triangle(Vertex &u1, Vertex &u2, Vertex &u3)
-		: v1(u1), v2(u2), v3(u3)
-	{
-	}
-
-	Vertex &v1;
-	Vertex &v2;
-	Vertex &v3;
-};
-
 class Mesh
 {
 public:
@@ -58,7 +48,11 @@ public:
 	Mesh(std::vector<Vertex> &vec);
 
 	std::vector<Vertex> vertices;
-	Vertex center;
+
+	/* \todo add convenience methods to get the vertices directly */
+	unsigned int center;
+	std::map<std::string, unsigned int> anchors;
+	std::vector<std::array<unsigned int, 3>> planes;
 
 	Mesh scale(float factor, const Vertex &origin) const;
 	void scaleInPlace(float factor, const Vertex &origin);
@@ -71,9 +65,6 @@ public:
 
 	Mesh interpolate(const Mesh &other, float factor) const;
 	void interpolateInPlace(const Mesh &other, float factor);
-
-private:
-	Vertex calculateCenter(std::vector<Vertex> &vec);
 };
 
 } /* namespace libre2d */

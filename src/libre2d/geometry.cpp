@@ -66,24 +66,6 @@ Vertex Vertex::interpolate(const Vertex &other, float factor) const
 }
 
 /**
- * \class Triangle
- * \brief Describe a triangle in two-dimensional space
- *
- * The Triangle describes a triangle in two-dimensional space, with float
- * precision.
- */
-
-/**
- * \fn Triangle::Triangle(Vertex &u1, Vertex &u2, Vertex &u3)
- * \brief Construct a Triangle with given Vertices
- * \param[in] u1 The first Vertex
- * \param[in] u2 The second Vertex
- * \param[in] u3 The third Vertex
- * \todo Check if these vertices need to be in clockwise order
- */
-
-
-/**
  * \class Mesh
  * \brief Describes an ordered set of vertices, and operations on the set
  *
@@ -100,8 +82,28 @@ Vertex Vertex::interpolate(const Vertex &other, float factor) const
  * \var Mesh::center
  * \brief The center vertex of the Mesh
  *
- * This vertex is calculated from the set of vertices, and is likely to not
- * be equal to any vertex in the set
+ * This is an index into the vertices array to designate the vertex that is the
+ * origin of transformation. This is the vertex that will serve as the center
+ * point for scale and rotate operations.
+ */
+
+/**
+ * \var Mesh::anchors
+ * \brief Map of Component name to anchor point
+ *
+ * The key to this map is a Component name, and the value is an index into the
+ * vertices array to designate the anchor point corresponding to the Component.
+ * This anchor point will used to translate the Component's final mesh using
+ * its center point. The Component shall be a child of the Component that owns
+ * this Mesh.
+ */
+
+/**
+ * \var Mesh::planes
+ * \brief The set of triangles
+ *
+ * This is a vector of triangles, where the triangles are defined by indexes
+ * into the vertices array.
  */
 
 /**
@@ -112,66 +114,27 @@ Vertex Vertex::interpolate(const Vertex &other, float factor) const
 /**
  * \brief Construct a Mesh from a set of vertices
  * \param[in] vec Vector of vertices
- *
- * This also automatically calculates and populates the center field. Note that
- * since Meshes are meant to have a rectangular bounding box, the center point
- * will simply be the center point of the bounding box of the mesh, and not the
- * point that is closest to all vertices.
  */
 Mesh::Mesh(std::vector<Vertex> &vec)
 {
 	vertices = vec;
-	center = calculateCenter(vec);
-}
-
-/**
- * \brief Calculate the center point from a set of vertices
- * \param[in] vec Vector of vertices
- * \return Center point, not necessarily a vertex from \a vec
- */
-Vertex Mesh::calculateCenter(std::vector<Vertex> &vec)
-{
-	if (!vec.size())
-		return Vertex();
-
-	float min_x, min_y, max_x, max_y;
-	min_x = min_y = std::numeric_limits<float>::max();
-	max_x = max_y = std::numeric_limits<float>::min();
-
-	for (Vertex &v : vec) {
-		if (v.x > max_x)
-			max_x = v.x;
-		if (v.y > max_y)
-			max_y = v.y;
-		if (v.x < min_x)
-			min_x = v.x;
-		if (v.y < min_y)
-			min_y = v.y;
-	}
-
-	return Vertex(min_x + ((max_x - min_x) / 2),
-		      min_y + ((max_y - min_y) / 2));
 }
 
 void Mesh::scaleInPlace(float factor, const Vertex &origin)
 {
+	Vertex &centerV = vertices.at(center);
+
 	Vertex newOrigin = Vertex(
-		((origin.x - center.x) * factor) + center.x,
-		((origin.y - center.y) * factor) + center.y);
+		((origin.x - centerV.x) * factor) + centerV.x,
+		((origin.y - centerV.y) * factor) + centerV.y);
 
 	for (Vertex &v : vertices) {
-		v.x = ((v.x - center.x) * factor) + center.x;
-		v.y = ((v.y - center.y) * factor) + center.y;
-	}
-
-	if (&origin == &center) {
-		calculateCenter(vertices);
-		return;
+		v.x = ((v.x - centerV.x) * factor) + centerV.x;
+		v.y = ((v.y - centerV.y) * factor) + centerV.y;
 	}
 
 	Vector translation = Vector(origin.x - newOrigin.x,
 				    origin.y - newOrigin.y);
-	/* This also recalculates center */
 	translateInPlace(translation);
 }
 
@@ -181,8 +144,6 @@ void Mesh::translateInPlace(const Vector &vec)
 		v.x = v.x + vec.x;
 		v.y = v.y + vec.y;
 	}
-
-	calculateCenter(vertices);
 }
 
 void Mesh::rotateInPlace(float degree, const Vertex &origin)
@@ -198,9 +159,6 @@ void Mesh::rotateInPlace(float degree, const Vertex &origin)
 		      + oy * cos(degree * PI / 180)
 		      + origin.y;
 	}
-
-	if (&origin != &center)
-		calculateCenter(vertices);
 }
 
 void Mesh::interpolateInPlace(const Mesh &other, float factor)
@@ -218,8 +176,6 @@ void Mesh::interpolateInPlace(const Mesh &other, float factor)
 		v.x = (o.x - v.x) * factor + v.x;
 		v.y = (o.y - v.y) * factor + v.y;
 	}
-
-	calculateCenter(vertices);
 }
 
 /**
