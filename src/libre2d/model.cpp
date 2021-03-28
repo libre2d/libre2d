@@ -40,6 +40,29 @@ namespace libre2d {
  */
 
 /**
+ * \brief Set the parameters on the Model
+ * \param[in] params Map of parameter name to parameter value
+ *
+ * This traverses the Component tree in a breadth-first manner and sets all the
+ * parameters. The parameters are identified by name.
+ */
+void Model::setParameters(const std::map<std::string, float> &params)
+{
+	std::deque<Component *> queue;
+	queue.push_back(&root);
+
+	while (!queue.empty()) {
+		Component *component = queue.front();
+		queue.pop_front();
+
+		for (Component &child : component->children)
+			queue.push_back(&child);
+
+		component->setParameters(params);
+	}
+}
+
+/**
  * \brief Validate the Model
  *
  * Check that all Parameters in a Parameter vector have the same ParameterInfo

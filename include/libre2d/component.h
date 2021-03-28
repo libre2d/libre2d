@@ -44,7 +44,8 @@ class Component
 {
 public:
 	// render
-	void setParameter(const std::map<std::string, float> &params);
+	void setParameters(const std::map<std::string, float> &params);
+	void reset();
 	bool validate() const;
 
 	std::string name;
@@ -55,7 +56,7 @@ public:
 	Mesh currentMesh;
 
 private:
-	void setParameter(const std::string &paramName, float value);
+	void moveChildren();
 };
 
 } /* namespace libre2d */

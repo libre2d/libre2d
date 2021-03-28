@@ -28,18 +28,29 @@ namespace libre2d {
  *
  * The Vertex describes a point in two-dimensional space, with float
  * precision, and can be positive or negative.
+ *
+ * There is a z value, but that is only used for z-indexing, and not for 3D
+ * space.
  */
 
 /**
  * \fn Vertex::Vertex()
- * \brief Construct a Vertex with x and y set to zero
+ * \brief Construct a Vertex with x and y and z-index set to zero
  */
 
 /**
  * \fn Vertex::Vertex(float xpos, float ypos)
- * \brief Construct a Vertex with given \a xpos and \a ypos values
+ * \brief Construct a Vertex with given \a xpos and \a ypos, with z set to zero
  * \param[in] xpos The x coordinate
  * \param[in] ypos The y coordinate
+ */
+
+/**
+ * \fn Vertex::Vertex(float xpos, float ypos, float zpos)
+ * \brief Construct a Vertex with given \a xpos, \a ypos, and \a zpos values
+ * \param[in] xpos The x coordinate
+ * \param[in] ypos The y coordinate
+ * \param[in] zpos The z coordinate
  */
 
 /**
@@ -52,10 +63,16 @@ namespace libre2d {
  * \brief The y coordinate of the Vertex
  */
 
+/*
+ * \var Vertex::z
+ * \brief The z-index of the Vertex
+ */
+
 void Vertex::interpolateInPlace(const Vertex &other, float factor)
 {
 	x = (other.x - x) * factor + x;
 	y = (other.y - y) * factor + y;
+	z = (other.z - z) * factor + z;
 }
 
 Vertex Vertex::interpolate(const Vertex &other, float factor) const
@@ -97,6 +114,16 @@ Vertex Vertex::interpolate(const Vertex &other, float factor) const
  * its center point. The Component shall be a child of the Component that owns
  * this Mesh.
  */
+
+const Vertex &Mesh::centerVertex() const
+{
+	return vertices.at(center);
+}
+
+const Vertex &Mesh::anchorVertex(std::string componentName) const
+{
+	return vertices.at(anchors.at(componentName));
+}
 
 /**
  * \var Mesh::planes
@@ -143,7 +170,18 @@ void Mesh::translateInPlace(const Vector &vec)
 	for (Vertex &v : vertices) {
 		v.x = v.x + vec.x;
 		v.y = v.y + vec.y;
+		v.z = v.z + vec.z;
 	}
+}
+
+void Mesh::translateToPointInPlace(const Vertex &dest)
+{
+	Vertex &centerV = vertices.at(center);
+
+	Vector transVec(dest.x - centerV.x,
+			dest.y - centerV.y,
+			dest.z - centerV.z);
+	translateInPlace(transVec);
 }
 
 void Mesh::rotateInPlace(float degree, const Vertex &origin)
@@ -175,6 +213,7 @@ void Mesh::interpolateInPlace(const Mesh &other, float factor)
 
 		v.x = (o.x - v.x) * factor + v.x;
 		v.y = (o.y - v.y) * factor + v.y;
+		v.z = (o.z - v.z) * factor + v.z;
 	}
 }
 
@@ -186,6 +225,8 @@ void Mesh::interpolateInPlace(const Mesh &other, float factor)
  * Scale the Mesh in both the X and Y dimensions equally, based on \a factor.
  * The scaling is done from the center of the Mesh, and \a origin is used
  * to keep that point in the Mesh constant.
+ *
+ * This operation ignores the z-index.
  *
  * \return A new Mesh of this scaled by \a factor with \a origin constant
  */
@@ -209,9 +250,24 @@ Mesh Mesh::translate(const Vector &vec) const
 }
 
 /**
+ * \brief Translate the Mesh to a destination point
+ * \param[in] dest Destination coordinate
+ * \return A new Mesh of this translated to \a dest
+ */
+Mesh Mesh::translateToPoint(const Vertex &dest) const
+{
+	Mesh mesh = *this;
+	mesh.translateToPointInPlace(dest);
+	return mesh;
+}
+
+/**
  * \brief Rotate the Mesh about an origin
  * \param[in] degree Counter-clockwise degrees through which to rotate the Mesh
  * \param[in] origin The origin about which to rotate the Mesh
+ *
+ * This operation ignores the z-index.
+ *
  * \return A new rotated Mesh
  */
 Mesh Mesh::rotate(float degree, const Vertex &origin) const

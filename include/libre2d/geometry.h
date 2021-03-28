@@ -23,17 +23,23 @@ class Vertex
 {
 public:
 	constexpr Vertex()
-		: x(0), y(0)
+		: x(0), y(0), z(0)
 	{
 	}
 
 	constexpr Vertex(float xpos, float ypos)
-		: x(xpos), y(ypos)
+		: x(xpos), y(ypos), z(0)
+	{
+	}
+
+	constexpr Vertex(float xpos, float ypos, float zpos)
+		: x(xpos), y(ypos), z(zpos)
 	{
 	}
 
 	float x;
 	float y;
+	float z;
 
 	Vertex interpolate(const Vertex &other, float factor) const;
 	void interpolateInPlace(const Vertex &other, float factor);
@@ -49,16 +55,21 @@ public:
 
 	std::vector<Vertex> vertices;
 
-	/* \todo add convenience methods to get the vertices directly */
 	unsigned int center;
 	std::map<std::string, unsigned int> anchors;
 	std::vector<std::array<unsigned int, 3>> planes;
+
+	const Vertex &centerVertex() const;
+	const Vertex &anchorVertex(std::string componentName) const;
 
 	Mesh scale(float factor, const Vertex &origin) const;
 	void scaleInPlace(float factor, const Vertex &origin);
 
 	Mesh translate(const Vector &vec) const;
 	void translateInPlace(const Vector &vec);
+
+	Mesh translateToPoint(const Vertex &dest) const;
+	void translateToPointInPlace(const Vertex &dest);
 
 	Mesh rotate(float degree, const Vertex &origin) const;
 	void rotateInPlace(float degree, const Vertex &origin);

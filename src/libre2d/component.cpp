@@ -80,9 +80,55 @@ bool Parameter::validate() const
 		valid = false;
 	}
 
+	if (keyMeshes.find(info->defaultValue) == keyMeshes.end()) {
+		std::cerr << "ERROR Parameter: no keyframe for default" << std::endl;
+		valid = false;
+	}
+
 	/* \todo check the number of vertices in all meshes and all anchor lists */
 
 	return valid;
+}
+
+/**
+ * \brief Set the parameter value and output the resulting Mesh
+ * \param[in] param The parameter value to set
+ * \return The result Mesh from setting the parameter value. If the
+ * value is out of range, it will be clamped.
+ *
+ * \todo confirm that copy elision works
+ */
+Mesh Parameter::setParameter(float param) const
+{
+	if (param <= info->min)
+		return keyMeshes.at(info->min);
+
+	if (param >= info->max)
+		return keyMeshes.at(info->max);
+
+	const auto &lower = keyMeshes.lower_bound(param);
+	const auto &upper = keyMeshes.upper_bound(param);
+
+	/* We have exact match */
+	if (lower != upper)
+		return lower->second;
+
+	const auto &realLower = std::prev(lower);
+	float lowerDist = param - realLower->first;
+
+	/* Round for discrete (because we're using floats) */
+	if (info->type == Discrete) {
+		float upperDist = upper->first - param;
+		if (upperDist > lowerDist)
+			return realLower->second;
+		return upper->second;
+	}
+
+	/* Interpolate for continuous */
+	float factor = lowerDist / (upper->first - realLower->first);
+	Mesh ret = realLower->second;
+	ret.interpolateInPlace(upper->second, factor);
+	return ret;
 }
 
 /**
@@ -114,36 +160,71 @@ bool Component::validate() const
 	return true;
 }
 
-void Component::setParameter(const std::string &paramName, [[maybe_unused]] float value)
+/**
+ * \brief Reset the current mesh of the Component to default parameter values
+ *
+ * This preserves the center point position (as a parent might have translated
+ * it via anchor points).
+ */
+void Component::reset()
 {
-	/* \todo implement this whole thing */
+	bool first = true;
 
-	/* \todo optimize: skip this if it's called from the vector setParameter() */
-	auto parameter = parameters.find(paramName);
-	if (parameter == parameters.end()) {
-		std::cerr << "ERROR Component: invalid parameter " << paramName << std::endl;
-		return;
+	Vertex origin = currentMesh.centerVertex();
+
+	for (auto pair : parameters) {
+		float value = pair.second.info->defaultValue;
+		if (first) {
+			currentMesh = pair.second.keyMeshes.at(value);
+			first = false;
+			continue;
+		}
+
+		currentMesh.interpolateInPlace(pair.second.keyMeshes.at(value), 0.5);
 	}
 
-	/* \todo handle resetting the currentFrame */
-	//currentMesh.interpolateInPlace(parameter->second.setParameter(value), 0.5);
+	currentMesh.translateToPointInPlace(origin);
 
-	/* \todo optimize: skip this if it's called from the vector setParameter() */
-	/* \todo use convenience methods for these */
-	for (Component &child : children) {
-		const Vertex &anchor = currentMesh.vertices.at(currentMesh.anchors.at(child.name));
-		const Mesh &childMesh = child.currentMesh;
-		const Vertex &childCenter = childMesh.vertices.at(childMesh.center);
-		Vector transVec(anchor.x - childCenter.x,
-				anchor.y - childCenter.y);
-		child.currentMesh.translateInPlace(transVec);
-	}
+	moveChildren();
 }
 
-void Component::setParameter(const std::map<std::string, float> &params)
+/**
+ * \brief Set the parameters on the current Component
+ * \param[in] params Map of parameter name to parameter value
+ *
+ * This also moves the children after the anchors are moved
+ */
+void Component::setParameters(const std::map<std::string, float> &params)
 {
-	for (auto pair : params)
-		setParameter(pair.first, pair.second);
+	/* \todo optimize the reset (skip the parameters that we'll overwrite) */
+	reset();
+
+	for (auto pair : params) {
+		const std::string &paramName = pair.first;
+		float value = pair.second;
+
+		/* skip the parameter if it doesn't apply to us */
+		auto parameter = parameters.find(paramName);
+		if (parameter == parameters.end())
+			continue;
+
+		currentMesh.interpolateInPlace(parameter->second.setParameter(value), 0.5);
+	}
+
+	moveChildren();
+}
+
+/**
+ * \brief Move the children Components to match the anchors
+ *
+ * This should be called after any transformation is made to the currentMesh
+ */
+void Component::moveChildren()
+{
+	for (Component &child : children) {
+		const Vertex &anchor = currentMesh.anchorVertex(child.name);
+		child.currentMesh.translateToPointInPlace(anchor);
+	}
 }
 
 } /* namespace libre2d */

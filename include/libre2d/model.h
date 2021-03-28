@@ -18,6 +18,8 @@ namespace libre2d {
 class Model
 {
 public:
+	void setParameters(const std::map<std::string, float> &params);
+
 	bool validate();
 
 	Component root;
