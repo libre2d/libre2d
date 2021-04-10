@@ -6,6 +6,7 @@ libre2d_public_headers = files([
     'geometry.h',
     'model.h',
     'model_loader.h',
+    'utils.h',
 ])
 
 include_dir = join_paths(libre2d_include_dir, 'libre2d')

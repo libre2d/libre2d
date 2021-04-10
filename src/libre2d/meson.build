@@ -5,6 +5,7 @@ libre2d_sources = files([
     'geometry.cpp',
     'model.cpp',
     'model_loader.cpp',
+    'utils.cpp',
 ])
 
 libre2d_sources += libre2d_public_headers
