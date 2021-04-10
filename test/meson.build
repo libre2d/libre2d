@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 public_tests = [
+    ['render', 'render.cpp'],
 ]
 
 internal_tests = [
