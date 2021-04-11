@@ -40,9 +40,6 @@ public:
 	float x;
 	float y;
 	float z;
-
-	Vertex interpolate(const Vertex &other, float factor) const;
-	void interpolateInPlace(const Vertex &other, float factor);
 };
 
 typedef Vertex Vector;

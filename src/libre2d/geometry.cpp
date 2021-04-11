@@ -68,20 +68,6 @@ namespace libre2d {
  * \brief The z-index of the Vertex
  */
 
-void Vertex::interpolateInPlace(const Vertex &other, float factor)
-{
-	x = (other.x - x) * factor + x;
-	y = (other.y - y) * factor + y;
-	z = (other.z - z) * factor + z;
-}
-
-Vertex Vertex::interpolate(const Vertex &other, float factor) const
-{
-	Vertex vertex = *this;
-	vertex.interpolateInPlace(other, factor);
-	return vertex;
-}
-
 /**
  * \class Mesh
  * \brief Describes an ordered set of vertices, and operations on the set
