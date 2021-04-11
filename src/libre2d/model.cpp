@@ -87,4 +87,27 @@ bool Model::validate()
 	return valid;
 }
 
+/**
+ * \brief Render the Model to the default framebuffer
+ *
+ * Render the Components in the Component tree in bottom-up order
+ *
+ * \todo allow other framebuffers as parameters?
+ */
+void Model::render()
+{
+	std::deque<Component *> queue;
+	queue.push_back(&root);
+
+	while (!queue.empty()) {
+		Component *component = queue.front();
+		queue.pop_front();
+
+		for (Component &child : component->children)
+			queue.push_back(&child);
+
+		component->render();
+	}
+}
+
 } /* namespace libre2d */

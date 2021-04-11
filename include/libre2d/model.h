@@ -22,6 +22,8 @@ public:
 
 	bool validate();
 
+	void render();
+
 	Component root;
 	std::map<Parameter::ParameterInfo, std::vector<Parameter *>> parameters;
 };

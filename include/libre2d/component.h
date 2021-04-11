@@ -43,10 +43,13 @@ public:
 class Component
 {
 public:
+	static void init();
+
 	// render
 	void setParameters(const std::map<std::string, float> &params);
 	void reset();
 	bool validate() const;
+	void render();
 
 	std::string name;
 	// uv map
