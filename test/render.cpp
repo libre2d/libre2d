@@ -5,7 +5,9 @@
  * render.cpp - Basic rendering test
  */
 
-#include <libre2d/utils.h>
+#include <libre2d/component.h>
+#include <libre2d/geometry.h>
+#include <libre2d/model.h>
 
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -18,90 +20,378 @@
 
 using namespace libre2d;
 
-GLuint programID_;
+Model model_;
 
-std::string vertShaderCode_ =
-"						\
-#version 330\n					\
-						\
-layout (location = 0) in vec3 Position;		\
-						\
-out vec4 Color;					\
-						\
-void main()					\
-{						\
-	gl_Position = vec4(Position, 1.0);	\
-	Color = vec4(0.0, 0.5, 0.5, 1.0);	\
-}						\
-";
-
-std::string fragShaderCode_ =
-"						\
-#version 330\n					\
-						\
-in vec4 Color;					\
-						\
-out vec4 FragColor;				\
-						\
-void main()					\
-{						\
-	FragColor = Color;			\
-}						\
-";
-
-class Vector3f
-{
-public:
-	Vector3f()
-		: x(0.0f), y(0.0f), z(0.0f)
-	{
-	}
-
-	Vector3f(float i, float j, float k)
-		: x(i), y(j), z(k)
-	{
-	}
-
-	float x;
-	float y;
-	float z;
+std::vector<Vertex> mouthVertices = {
+	Vertex(-0.17241, -0.46835, 0.0),
+	Vertex(-0.24138, -0.48101, 0.0),
+	Vertex(-0.11724, -0.48101, 0.0),
+	Vertex(-0.06207, -0.48101, 0.0),
+	Vertex( 0.00690, -0.50633, 0.0),
+	Vertex(-0.17241, -0.51899, 0.0),
+	Vertex(-0.07586, -0.53165, 0.0),
+	Vertex(-0.22759, -0.54430, 0.0),
+	Vertex(-0.15862, -0.56962, 0.0),
+	Vertex(-0.08966, -0.56962, 0.0),
+	Vertex(-0.02069, -0.56962, 0.0),
 };
+
+std::vector<std::array<unsigned int, 3>> mouthPlanes = {
+	{0, 5, 1},
+	{0, 2, 5},
+	{2, 3, 6},
+	{3, 4, 6},
+	{2, 6, 5},
+	{1, 5, 7},
+	{5, 8, 7},
+	{5, 9, 8},
+	{6, 9, 5},
+	{6, 10, 9},
+	{4, 10, 6},
+};
+
+std::vector<Vertex> faceVertices = {
+	Vertex(-0.13103, 0.53165, 0.0),
+	Vertex(-0.00690, 0.53165, 0.0),
+	Vertex(-0.25517, 0.49367, 0.0),
+	Vertex(0.10345, 0.48101, 0.0),
+	Vertex(-0.32414, 0.44304, 0.0),
+	Vertex(0.20000, 0.43038, 0.0),
+	Vertex(-0.43448, 0.36709, 0.0),
+	Vertex(0.28276, 0.35443, 0.0),
+	Vertex(-0.08966, 0.34177, 0.0),
+	Vertex(-0.25517, 0.31646, 0.0),
+	Vertex(0.07586, 0.30380, 0.0),
+	Vertex(-0.48966, 0.27848, 0.0),
+	Vertex(0.36552, 0.25316, 0.0),
+	Vertex(-0.36552, 0.22785, 0.0),
+	Vertex(0.15862, 0.21519, 0.0),
+	Vertex(-0.55862, 0.20253, 0.0),
+	Vertex(-0.22759, 0.13924, 0.0),
+	Vertex(-0.00690, 0.13924, 0.0),
+	Vertex(0.42069, 0.11392, 0.0),
+	Vertex(-0.62759, 0.10127, 0.0),
+	Vertex(0.28276, 0.10127, 0.0),
+	Vertex(-0.51724, 0.08861, 0.0),
+	Vertex(-0.32414, 0.05063, 0.0),
+	Vertex(0.11724, 0.03797, 0.0),
+	Vertex(-0.11724, 0.01266, 0.0),
+	Vertex(-0.66897, 0.00000, 0.0),
+	Vertex(0.35172, -0.01266, 0.0),
+	Vertex(-0.58621, -0.02532, 0.0),
+	Vertex(0.42069, -0.03797, 0.0),
+	Vertex(-0.40690, -0.07595, 0.0),
+	Vertex(-0.68276, -0.08861, 0.0),
+	Vertex(0.21379, -0.10127, 0.0),
+	Vertex(-0.22759, -0.11392, 0.0),
+	Vertex(0.00690, -0.12658, 0.0),
+	Vertex(0.33793, -0.12658, 0.0),
+	Vertex(-0.60000, -0.15190, 0.0),
+	Vertex(-0.48966, -0.16456, 0.0),
+	Vertex(0.40690, -0.16456, 0.0),
+	Vertex(-0.68276, -0.17722, 0.0),
+	Vertex(-0.33793, -0.20253, 0.0),
+	Vertex(-0.10345, -0.21519, 0.0),
+	Vertex(0.13103, -0.22785, 0.0),
+	Vertex(-0.57241, -0.24051, 0.0),
+	Vertex(0.29655, -0.25316, 0.0),
+	Vertex(-0.43448, -0.27848, 0.0),
+	Vertex(0.39310, -0.27848, 0.0),
+	Vertex(-0.68276, -0.29114, 0.0),
+	Vertex(-0.53103, -0.32911, 0.0),
+	Vertex(0.10345, -0.32911, 0.0),
+	Vertex(-0.33793, -0.34177, 0.0),
+	Vertex(-0.00690, -0.34177, 0.0),
+	Vertex(-0.65517, -0.35443, 0.0),
+	Vertex(-0.18621, -0.35443, 0.0),
+	Vertex(0.22759, -0.39241, 0.0),
+	Vertex(0.36552, -0.40506, 0.0),
+	Vertex(-0.46207, -0.41772, 0.0),
+	Vertex(-0.62759, -0.43038, 0.0),
+	Vertex(0.00690, -0.44304, 0.0),
+	Vertex(-0.21379, -0.45570, 0.0),
+	Vertex(0.13103, -0.48101, 0.0),
+	Vertex(-0.39310, -0.49367, 0.0),
+	Vertex(-0.08966, -0.49367, 0.0),
+	Vertex(-0.57241, -0.50633, 0.0),
+	Vertex(0.31034, -0.50633, 0.0),
+	Vertex(0.04828, -0.54430, 0.0),
+	Vertex(-0.48966, -0.55696, 0.0),
+	Vertex(-0.29655, -0.58228, 0.0),
+	Vertex(0.24138, -0.58228, 0.0),
+	Vertex(-0.04828, -0.59494, 0.0),
+	Vertex(-0.40690, -0.62025, 0.0),
+	Vertex(-0.15862, -0.63291, 0.0),
+	Vertex(0.14483, -0.64557, 0.0),
+	Vertex(-0.35172, -0.67089, 0.0),
+	Vertex(0.06207, -0.69620, 0.0),
+	Vertex(-0.26897, -0.72152, 0.0),
+	Vertex(-0.00690, -0.72152, 0.0),
+	Vertex(-0.18621, -0.75949, 0.0),
+	Vertex(-0.08966, -0.75949, 0.0),
+};
+
+std::vector<std::array<unsigned int, 3>> facePlanes = {
+	{ 0,  1,  8},
+	{ 1,  3,  8},
+	{ 3,  5, 10},
+	{ 3, 10,  8},
+	{ 5,  7, 10},
+	{ 7, 14, 10},
+	{ 7, 12, 14},
+	{12, 20, 14},
+	{12, 18, 20},
+	{18, 26, 20},
+	{18, 28, 26},
+	{28, 34, 26},
+	{28, 37, 34},
+	{34, 37, 43},
+	{37, 45, 43},
+	{45, 53, 43},
+	{45, 54, 53},
+	{54, 63, 53},
+	{63, 67, 53},
+	{67, 59, 53},
+	{67, 71, 59},
+	{71, 73, 59},
+	{73, 64, 59},
+	{73, 75, 64},
+	{75, 68, 64},
+	{75, 77, 68},
+	{77, 70, 68},
+	{77, 76, 70},
+	{76, 74, 70},
+	{74, 72, 70},
+	{72, 66, 70},
+	{72, 69, 66},
+	{69, 65, 66},
+	{65, 60, 66},
+	{65, 62, 60},
+	{62, 55, 60},
+	{62, 56, 55},
+	{56, 51, 55},
+	{51, 46, 47},
+	{46, 42, 47},
+	{46, 38, 42},
+	{38, 35, 42},
+	{38, 30, 35},
+	{30, 27, 35},
+	{30, 25, 27},
+	{25, 19, 27},
+	{19, 21, 27},
+	{19, 15, 21},
+	{15, 11, 21},
+	{11, 13, 21},
+	{11,  6, 13},
+	{ 6,  4, 13},
+	{ 4,  2,  9},
+	{ 4,  9, 13},
+	{ 2,  0,  9},
+	{ 0,  8,  9},
+
+	{10, 14, 17},
+	{14, 23, 17},
+	{14, 20, 23},
+	{20, 31, 23},
+	{20, 26, 31},
+	{26, 34, 31},
+	{31, 34, 43},
+	{31, 43, 41},
+	{41, 43, 53},
+	{48, 53, 59},
+	{41, 53, 48},
+	{59, 64, 57},
+	{48, 59, 57},
+	{57, 64, 68},
+	{61, 68, 70},
+	{57, 68, 61},
+	{61, 70, 66},
+	{61, 66, 58},
+	{58, 66, 60},
+	{49, 58, 60},
+	{49, 60, 55},
+	{44, 49, 55},
+	{44, 55, 47},
+	{35, 36, 42},
+	{42, 44, 47},
+	{36, 44, 42},
+	{27, 36, 35},
+	{29, 36, 27},
+	{21, 29, 27},
+	{21, 22, 29},
+	{13, 22, 21},
+	{13, 16, 22},
+	{ 9, 16, 13},
+	{ 9,  8, 16},
+	{16, 17,  8},
+	{ 8, 10, 17},
+
+	{16, 17, 24},
+	{17, 23, 24},
+	{24, 23, 33},
+	{23, 31, 33},
+	{33, 31, 41},
+	{50, 48, 57},
+	{16, 22, 24},
+	{22, 24, 32},
+	{24, 33, 32},
+	{22, 32, 29},
+	{29, 39, 36},
+	{36, 39, 44},
+	{39, 49, 44},
+	{49, 52, 58},
+	{39, 52, 49},
+	{29, 32, 39},
+	{32, 33, 40},
+	{33, 41, 50},
+	{32, 52, 39},
+	{32, 40, 52},
+	{50, 57, 61},
+	{52, 61, 58},
+	{52, 50, 61},
+	{40, 50, 52},
+	{33, 50, 40},
+	{41, 48, 50},
+};
+
+std::vector<Vertex> leftEyeVertices = {
+	Vertex(-0.39310, 0.05063, 0.0),
+	Vertex(-0.29655, 0.05063, 0.0),
+	Vertex(-0.48966, 0.02532, 0.0),
+	Vertex(-0.20000, 0.02532, 0.0),
+	Vertex(-0.55862, -0.01266, 0.0),
+	Vertex(-0.40690, -0.05063, 0.0),
+	Vertex(-0.29655, -0.05063, 0.0),
+	Vertex(-0.61379, -0.07595, 0.0),
+	Vertex(-0.50345, -0.07595, 0.0),
+	Vertex(-0.21379, -0.07595, 0.0),
+	Vertex(-0.43448, -0.13924, 0.0),
+	Vertex(-0.35172, -0.13924, 0.0),
+	Vertex(-0.24138, -0.15190, 0.0),
+	Vertex(-0.54483, -0.16456, 0.0),
+	Vertex(-0.47586, -0.20253, 0.0),
+	Vertex(-0.28276, -0.20253, 0.0),
+	Vertex(-0.39310, -0.22785, 0.0),
+};
+
+std::vector<std::array<unsigned int, 3>> leftEyePlanes = {
+	{ 1,  3,  6},
+	{ 3,  9,  6},
+	{ 9, 12,  6},
+	{12, 15, 11},
+	{ 6, 12, 11},
+	{11, 15, 16},
+	{10, 16, 14},
+	{10, 11, 16},
+	{ 7,  8, 13},
+	{19, 14, 13},
+	{ 8, 10, 13},
+	{ 4,  8,  7},
+	{ 2,  5,  4},
+	{ 4,  5,  8},
+	{ 0,  5,  2},
+	{ 1,  6,  0},
+	{ 0,  6,  5},
+	{ 5,  6, 11},
+	{ 5, 11, 10},
+	{ 5, 10,  8},
+};
+
+std::vector<Vertex> rightEyeVertices = {
+	Vertex(0.20000, -0.01266, 0.0),
+	Vertex(0.26897, -0.01266, 0.0),
+	Vertex(0.36552, -0.02532, 0.0),
+	Vertex(0.11724, -0.05063, 0.0),
+	Vertex(0.43448, -0.06329, 0.0),
+	Vertex(0.24138, -0.08861, 0.0),
+	Vertex(0.15862, -0.10127, 0.0),
+	Vertex(0.33793, -0.10127, 0.0),
+	Vertex(0.10345, -0.11392, 0.0),
+	Vertex(0.42069, -0.12658, 0.0),
+	Vertex(0.20000, -0.15190, 0.0),
+	Vertex(0.31034, -0.15190, 0.0),
+	Vertex(0.08966, -0.17722, 0.0),
+	Vertex(0.37931, -0.18987, 0.0),
+	Vertex(0.25517, -0.20253, 0.0),
+	Vertex(0.17241, -0.22785, 0.0),
+	Vertex(0.32414, -0.24051, 0.0),
+	Vertex(0.08966, -0.27848, 0.0),
+	Vertex(0.25517, -0.27848, 0.0),
+	Vertex(0.17241, -0.31646, 0.0),
+};
+
+std::vector<std::array<unsigned int, 3>> rightEyePlanes = {
+	{ 0,  1,  5},
+	{ 1,  2,  5},
+	{ 2,  7,  5},
+	{ 2,  4,  7},
+	{ 4,  9,  7},
+	{ 9, 13, 11},
+	{ 7,  9, 11},
+	{14, 16, 18},
+	{15, 18, 19},
+	{15, 19, 17},
+	{14, 13, 16},
+	{11, 13, 14},
+	{14, 18, 15},
+	{12, 15, 17},
+	{ 0,  6,  3},
+	{ 3,  6,  8},
+	{ 8, 10, 12},
+	{10, 15, 12},
+	{ 6, 10,  8},
+	{ 0,  5,  6},
+	{ 6,  5, 10},
+	{10, 14, 15},
+	{10, 11, 14},
+	{ 5, 11, 10},
+	{ 5,  7, 11},
+};
+
+void createModel()
+{
+	/*
+	 * Skip center because we don't have transformations yet, and skip
+	 * anchors since we don't have child meshes yet. But we do need planes
+	 * for rendering.
+	 */
+	Mesh mouthMesh(mouthVertices);
+	mouthMesh.planes = mouthPlanes;
+
+	Mesh faceMesh(faceVertices);
+	faceMesh.planes = facePlanes;
+
+	Mesh leftEyeMesh(leftEyeVertices);
+	leftEyeMesh.planes = leftEyePlanes;
+
+	Mesh rightEyeMesh(rightEyeVertices);
+	rightEyeMesh.planes = rightEyePlanes;
+
+	Component mouth;
+	mouth.currentMesh = mouthMesh;
+
+	Component leftEye;
+	leftEye.currentMesh = leftEyeMesh;
+
+	Component rightEye;
+	rightEye.currentMesh = rightEyeMesh;
+
+	Component face;
+	face.currentMesh = faceMesh;
+
+	face.children.push_back(mouth);
+	face.children.push_back(leftEye);
+	face.children.push_back(rightEye);
+
+	model_.root = face;
+}
 
 void render()
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	Vector3f vertices[] = {
-		Vector3f(-1.0f, -1.0f, 0.0f),
-		Vector3f( 1.0f, -1.0f, 0.0f),
-		Vector3f( 0.0f,  1.0f, 0.0f),
-	};
-
-	unsigned int indices[] = {0, 1, 2};
-
-	unsigned int vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	unsigned int ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	glUseProgram(programID_);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-	glDisableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ibo);
+	model_.render();
 
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -112,7 +402,7 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
-	glutInitWindowSize(640, 480);
+	glutInitWindowSize(580, 632);
 	glutInitWindowPosition(0, 0);
 	glutCreateWindow("libre2d - render test");
 
@@ -123,10 +413,9 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	programID_ = utils::gl::loadShadersFromStrings(vertShaderCode_.c_str(), 0,
-						       fragShaderCode_.c_str(), 0);
-	if (!programID_)
-		return -1;
+	Component::init();
+
+	createModel();
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
