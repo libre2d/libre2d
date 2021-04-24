@@ -9,6 +9,7 @@ libre2d_sources = files([
 ])
 
 libre2d_sources += libre2d_public_headers
+libre2d_sources += libre2d_internal_headers
 
 includes = [
     libre2d_includes,

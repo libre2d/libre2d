@@ -6,11 +6,12 @@
  */
 
 #include <libre2d/model.h>
+
+#include <libre2d/component.h>
 #include <libre2d/utils.h>
 
 #include <deque>
-
-#include <libre2d/component.h>
+#include <tuple>
 
 /**
  * \file model.h
@@ -81,6 +82,26 @@ void Model::init()
 	programID_ = utils::gl::loadShadersFromStrings(
 			vertShaderCode_.c_str(), 0,
 			fragShaderCode_.c_str(), 0);
+}
+
+/*
+ * \brief Load texture from image
+ *
+ * The Components will contain their own uv mapping, which contain coordinates
+ * to this texture.
+ *
+ * This function is for bootstrapping, and will be replaced after a libre2d file
+ * format and loader is created.
+ */
+void Model::loadTexture(const char *path)
+{
+	/*
+	 * I think we can ignore width and height and number of color channels
+	 * for now
+	 */
+
+	std::tie(textureID_, std::ignore, std::ignore, std::ignore) =
+		utils::gl::loadTextureFromFile(path);
 }
 
 /**

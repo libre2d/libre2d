@@ -11,7 +11,11 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <libre2d/internal/stb_image.h>
 
 namespace libre2d {
 
@@ -118,6 +122,39 @@ uint32_t loadShaders(const char *vertexFilePath, const char *fragmentFilePath)
 	glDeleteShader(fragmentShaderID);
 
 	return ret;
+}
+
+// texture, width, height, number of color channels
+std::tuple<uint32_t, int, int, int> loadTextureFromFile(const char *path)
+{
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	if (!textureID) {
+		std::cerr << "Failed to generate texture" << std::endl;
+		return { 0, 0, 0, 0 };
+	}
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	int width, height, nrChannels;
+	unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 4);
+	if (!data) {
+		std::cerr << "Failed to load texture: " << path << std::endl;
+		return { 0, 0, 0, 0 };
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+		     GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(data);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return { textureID, width, height, nrChannels };
 }
 
 } /* namespace gl */

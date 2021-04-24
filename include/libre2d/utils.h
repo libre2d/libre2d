@@ -9,6 +9,7 @@
 #define __LIBRE2D_UTILS_H__
 
 #include <string>
+#include <tuple>
 
 namespace libre2d {
 
@@ -24,6 +25,8 @@ uint32_t loadShadersFromStrings(const char *vertSource, uint32_t vertShaderID,
 				const char *fragSource, uint32_t fragShaderID);
 
 uint32_t loadShaders(const char *vertexFilePath, const char *fragmentFilePath);
+
+std::tuple<uint32_t, int, int, int> loadTextureFromFile(const char *filename);
 
 } /* namespace gl */
 

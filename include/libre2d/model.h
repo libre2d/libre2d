@@ -20,14 +20,15 @@ class Model
 public:
 	static void init();
 
+	void loadTexture(const char *path);
 	void setParameters(const std::map<std::string, float> &params);
-
 	bool validate();
-
 	void render();
 
 	Component root;
 	std::map<Parameter::ParameterInfo, std::vector<Parameter *>> parameters;
+
+	uint32_t textureID_;
 };
 
 } /* namespace libre2d */
