@@ -6,7 +6,6 @@
  */
 
 #include <libre2d/component.h>
-#include <libre2d/utils.h>
 
 #include <GL/glew.h>
 
@@ -19,35 +18,6 @@
  */
 
 namespace libre2d {
-
-static std::string vertShaderCode_ =
-"						\
-#version 330\n					\
-						\
-layout (location = 0) in vec3 Position;		\
-						\
-out vec4 Color;					\
-						\
-void main()					\
-{						\
-	gl_Position = vec4(Position, 1.0);	\
-	Color = vec4(0.0, 0.5, 0.5, 1.0);	\
-}						\
-";
-
-static std::string fragShaderCode_ =
-"						\
-#version 330\n					\
-						\
-in vec4 Color;					\
-						\
-out vec4 FragColor;				\
-						\
-void main()					\
-{						\
-	FragColor = Color;			\
-}						\
-";
 
 /**
  * \class Parameter
@@ -182,20 +152,6 @@ Mesh Parameter::setParameter(float param) const
  * \todo implement validate
  */
 
-static uint32_t programID_ = 0;
-
-/*
- * \brief Initialize graphics
- *
- * This should be called after OpenGL is initialized
- */
-void Component::init()
-{
-	programID_ = utils::gl::loadShadersFromStrings(
-			vertShaderCode_.c_str(), 0,
-			fragShaderCode_.c_str(), 0);
-}
-
 bool Component::validate() const
 {
 	/*
@@ -263,7 +219,7 @@ void Component::setParameters(const std::map<std::string, float> &params)
 /**
  * \brief Render the Component to the default framebuffer
  */
-void Component::render()
+void Component::render(uint32_t programID)
 {
 	unsigned int vertSize = currentMesh.vertices.size() * sizeof(Vertex);
 	unsigned int indexSize = currentMesh.planes.size() *
@@ -281,7 +237,7 @@ void Component::render()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize,
 		     currentMesh.planes.data(), GL_STATIC_DRAW);
 
-	glUseProgram(programID_);
+	glUseProgram(programID);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);

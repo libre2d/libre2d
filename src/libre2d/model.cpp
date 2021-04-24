@@ -6,6 +6,7 @@
  */
 
 #include <libre2d/model.h>
+#include <libre2d/utils.h>
 
 #include <deque>
 
@@ -17,6 +18,35 @@
  */
 
 namespace libre2d {
+
+static std::string vertShaderCode_ =
+"						\
+#version 330\n					\
+						\
+layout (location = 0) in vec3 Position;		\
+						\
+out vec4 Color;					\
+						\
+void main()					\
+{						\
+	gl_Position = vec4(Position, 1.0);	\
+	Color = vec4(0.0, 0.5, 0.5, 1.0);	\
+}						\
+";
+
+static std::string fragShaderCode_ =
+"						\
+#version 330\n					\
+						\
+in vec4 Color;					\
+						\
+out vec4 FragColor;				\
+						\
+void main()					\
+{						\
+	FragColor = Color;			\
+}						\
+";
 
 /**
  * \class Model
@@ -38,6 +68,20 @@ namespace libre2d {
  * The field is a vector of Parameter pointers. These should point to the
  * Parameter instances that are members of the Components.
  */
+
+static uint32_t programID_ = 0;
+
+/*
+ * \brief Initialize graphics
+ *
+ * This should be called after OpenGL is initialized
+ */
+void Model::init()
+{
+	programID_ = utils::gl::loadShadersFromStrings(
+			vertShaderCode_.c_str(), 0,
+			fragShaderCode_.c_str(), 0);
+}
 
 /**
  * \brief Set the parameters on the Model
@@ -106,7 +150,7 @@ void Model::render()
 		for (Component &child : component->children)
 			queue.push_back(&child);
 
-		component->render();
+		component->render(programID_);
 	}
 }
 
