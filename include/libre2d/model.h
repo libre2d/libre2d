@@ -20,7 +20,7 @@ class Model
 public:
 	static void init();
 
-	void loadTexture(const char *path);
+	bool loadTexture(const char *path);
 	void setParameters(const std::map<std::string, float> &params);
 	bool validate();
 	void render();

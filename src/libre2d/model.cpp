@@ -25,13 +25,14 @@ static std::string vertShaderCode_ =
 #version 330\n					\
 						\
 layout (location = 0) in vec3 Position;		\
+layout (location = 1) in vec2 iTexCoord;	\
 						\
-out vec4 Color;					\
+out vec2 oTexCoord;				\
 						\
 void main()					\
 {						\
 	gl_Position = vec4(Position, 1.0);	\
-	Color = vec4(0.0, 0.5, 0.5, 1.0);	\
+	oTexCoord = iTexCoord;			\
 }						\
 ";
 
@@ -39,13 +40,15 @@ static std::string fragShaderCode_ =
 "						\
 #version 330\n					\
 						\
-in vec4 Color;					\
+in vec2 oTexCoord;				\
 						\
 out vec4 FragColor;				\
 						\
+uniform sampler2D sampler;			\
+						\
 void main()					\
 {						\
-	FragColor = Color;			\
+	FragColor = texture(sampler, oTexCoord);\
 }						\
 ";
 
@@ -92,8 +95,10 @@ void Model::init()
  *
  * This function is for bootstrapping, and will be replaced after a libre2d file
  * format and loader is created.
+ * 
+ * \return true on success, false on failure
  */
-void Model::loadTexture(const char *path)
+bool Model::loadTexture(const char *path)
 {
 	/*
 	 * I think we can ignore width and height and number of color channels
@@ -102,6 +107,8 @@ void Model::loadTexture(const char *path)
 
 	std::tie(textureID_, std::ignore, std::ignore, std::ignore) =
 		utils::gl::loadTextureFromFile(path);
+
+	return textureID_ != 0;
 }
 
 /**
@@ -171,7 +178,7 @@ void Model::render()
 		for (Component &child : component->children)
 			queue.push_back(&child);
 
-		component->render(programID_);
+		component->render(programID_, textureID_);
 	}
 }
 

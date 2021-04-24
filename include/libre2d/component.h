@@ -43,14 +43,13 @@ public:
 class Component
 {
 public:
-	// render
 	void setParameters(const std::map<std::string, float> &params);
 	void reset();
 	bool validate() const;
-	void render(uint32_t programID);
+	void render(uint32_t programID, uint32_t textureID);
 
 	std::string name;
-	// uv map
+	std::vector<UV> uvMap;
 	std::vector<Component> children;
 	std::map<std::string, Parameter> parameters;
 

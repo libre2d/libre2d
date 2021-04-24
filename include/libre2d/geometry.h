@@ -19,6 +19,23 @@ namespace libre2d {
 
 const double PI = std::acos(-1);
 
+class UV
+{
+public:
+	constexpr UV()
+		: u(0), v(0)
+	{
+	}
+
+	constexpr UV(float upos, float vpos)
+		: u(upos), v(vpos)
+	{
+	}
+
+	float u;
+	float v;
+};
+
 class Vertex
 {
 public:

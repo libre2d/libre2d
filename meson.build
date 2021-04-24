@@ -14,6 +14,8 @@ cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 config_h = configuration_data()
 
+config_h.set('TEST_TEXTURE_DIR', '"' + meson.source_root() + '"')
+
 common_arguments = [
     '-Wshadow',
     '-include', 'config.h',

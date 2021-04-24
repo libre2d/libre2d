@@ -158,6 +158,7 @@ bool Component::validate() const
 	 * \todo validate the length of the children list with the anchor list
 	 * length of the KeyFrames in the Parameters
 	 * length of vertices in the meshes (recurse into parameter validation?)
+	 * length of uvMap vs number of vertices in the meshes
 	 */
 	return true;
 }
@@ -219,17 +220,25 @@ void Component::setParameters(const std::map<std::string, float> &params)
 /**
  * \brief Render the Component to the default framebuffer
  */
-void Component::render(uint32_t programID)
+void Component::render(uint32_t programID, uint32_t textureID)
 {
 	unsigned int vertSize = currentMesh.vertices.size() * sizeof(Vertex);
 	unsigned int indexSize = currentMesh.planes.size() *
 				 3 * sizeof(unsigned int);
+
+	unsigned int cbo;
+	glGenBuffers(1, &cbo);
+	glBindBuffer(GL_ARRAY_BUFFER, cbo);
+	glBufferData(GL_ARRAY_BUFFER, uvMap.size() * sizeof(UV),
+		     uvMap.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	unsigned int vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertSize,
 		     currentMesh.vertices.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	unsigned int ibo;
 	glGenBuffers(1, &ibo);
@@ -239,16 +248,20 @@ void Component::render(uint32_t programID)
 
 	glUseProgram(programID);
 
+	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 	glDrawElements(GL_TRIANGLES, indexSize, GL_UNSIGNED_INT, 0);
+
 	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ibo);
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &cbo);
 }
 
 /**

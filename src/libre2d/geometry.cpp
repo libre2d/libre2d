@@ -23,6 +23,13 @@ namespace libre2d {
  */
 
 /**
+ * \class UV
+ * \brief Describe a two-dimensional coordinate, mainly for UV-mapping
+ *
+ * \todo the rest of the docs
+ */
+
+/**
  * \class Vertex
  * \brief Describe a vertex in two-dimensional space
  *
