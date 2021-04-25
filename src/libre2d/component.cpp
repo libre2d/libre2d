@@ -226,6 +226,9 @@ void Component::render(uint32_t programID, uint32_t textureID)
 	unsigned int indexSize = currentMesh.planes.size() *
 				 3 * sizeof(unsigned int);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	unsigned int cbo;
 	glGenBuffers(1, &cbo);
 	glBindBuffer(GL_ARRAY_BUFFER, cbo);
