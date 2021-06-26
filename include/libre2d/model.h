@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <libre2d/component.h>
+#include <libre2d/transformer.h>
 
 namespace libre2d {
 
@@ -26,7 +27,7 @@ public:
 	void render();
 
 	Component root;
-	std::map<Parameter::ParameterInfo, std::vector<Parameter *>> parameters;
+	std::map<Transformer::ParameterInfo, std::vector<Transformer *>> parameters;
 
 	uint32_t textureID_;
 };

@@ -72,6 +72,7 @@ public:
 	unsigned int center;
 	std::map<std::string, unsigned int> anchors;
 	std::vector<std::array<unsigned int, 3>> planes;
+	std::map<std::string, std::vector<unsigned int>> transformers;
 
 	const Vertex &centerVertex() const;
 	const Vertex &anchorVertex(std::string componentName) const;

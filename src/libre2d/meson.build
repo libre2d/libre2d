@@ -5,6 +5,7 @@ libre2d_sources = files([
     'geometry.cpp',
     'model.cpp',
     'model_loader.cpp',
+    'transformer.cpp',
     'utils.cpp',
 ])
 
@@ -14,6 +15,8 @@ libre2d_sources += libre2d_internal_headers
 includes = [
     libre2d_includes,
 ]
+
+subdir('transformer')
 
 libgl = dependency('gl')
 libglew = dependency('glew')

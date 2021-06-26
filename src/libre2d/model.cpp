@@ -146,10 +146,10 @@ bool Model::validate()
 	bool valid = true;
 
 	for (auto &pair : parameters) {
-		for (Parameter *param : pair.second) {
+		for (Transformer *transformer : pair.second) {
 			/* \todo confirm that this pointer comparison works */
-			if (!param->info.get() ||
-			    param->info.get() != &pair.first) {
+			if (!transformer->info.get() ||
+			    transformer->info.get() != &pair.first) {
 				valid = false;
 				break;
 			}

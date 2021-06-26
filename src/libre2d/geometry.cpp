@@ -127,6 +127,19 @@ const Vertex &Mesh::anchorVertex(std::string componentName) const
  */
 
 /**
+ * \var Mesh::transformers
+ * \brief Map of transformer ID to set of vertices
+ *
+ * The key to this map is a transformer name (unique within a Component), and the
+ * value is a vector of indexes into the vertices array. This set of vertices
+ * are the vertices that are used by the transformer designated by the
+ * transformer name.
+ *
+ * This mechanism allows transformers to transform both the visual part of the
+ * mesh as well as relevant transformers all at the same time.
+ */
+
+/**
  * \fn Mesh::Mesh()
  * \brief Construct a Mesh with no vertices and a center of zero
  */

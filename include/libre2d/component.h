@@ -9,36 +9,13 @@
 #define __LIBRE2D_COMPONENT_H__
 
 #include <map>
-#include <memory>
 #include <string>
 #include <vector>
 
 #include <libre2d/geometry.h>
+#include <libre2d/transformer.h>
 
 namespace libre2d {
-
-class Parameter
-{
-public:
-	enum ParameterType {
-		Discrete,
-		Continuous
-	};
-
-	struct ParameterInfo {
-		std::string name;
-		ParameterType type;
-		float defaultValue;
-		float min;
-		float max;
-	};
-
-	bool validate() const;
-	Mesh setParameter(float param) const;
-
-	std::shared_ptr<ParameterInfo> info;
-	std::map<float, Mesh> keyMeshes;
-};
 
 class Component
 {
@@ -51,8 +28,9 @@ public:
 	std::string name;
 	std::vector<UV> uvMap;
 	std::vector<Component> children;
-	std::map<std::string, Parameter> parameters;
+	std::vector<Transformer *> transformers;
 
+	Mesh baseMesh;
 	Mesh currentMesh;
 
 private:
