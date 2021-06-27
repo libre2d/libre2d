@@ -33,8 +33,14 @@ public:
 		float max;
 	};
 
+	enum TransformWhom {
+		Self,
+		Child
+	};
+
 	bool validate() const;
-	virtual Mesh transform(const Mesh &mesh, float param) const = 0;
+	virtual Mesh transform(const Mesh &mesh, float param,
+			       enum TransformWhom) = 0;
 
 	std::shared_ptr<ParameterInfo> info;
 	float currentValue;

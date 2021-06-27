@@ -2,11 +2,11 @@
 /*
  * Copyright (C) 2021, Paul Elder
  *
- * substitution.h - A mesh substitution transformer
+ * rotation.h - A mesh rotation transformer
  */
 
-#ifndef __LIBRE2D_TRANSFORMER_SUBSTITUTION_H__
-#define __LIBRE2D_TRANSFORMER_SUBSTITUTION_H__
+#ifndef __LIBRE2D_TRANSFORMER_ROTATION_H__
+#define __LIBRE2D_TRANSFORMER_ROTATION_H__
 
 #include <map>
 
@@ -15,17 +15,18 @@
 
 namespace libre2d {
 
-class TransformerSubstitution : public Transformer
+class TransformerRotation : public Transformer
 {
 public:
-	~TransformerSubstitution() { }
+	~TransformerRotation() { }
 
 	Mesh transform(const Mesh &mesh, float param,
 		       enum TransformWhom whom);
 
-	std::map<float, Mesh> keyMeshes;
+	float offset;
+	Vertex center;
 };
 
 } /* namespace libre2d */
 
-#endif /* __LIBRE2D_TRANSFORMER_SUBSTITUTION_H__ */
+#endif /* __LIBRE2D_TRANSFORMER_ROTATION_H__ */

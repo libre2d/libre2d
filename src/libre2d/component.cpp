@@ -11,6 +11,9 @@
 
 #include <iostream>
 #include <map>
+#include <queue>
+
+#include <libre2d/transformer.h>
 
 /**
  * \file component.h
@@ -83,9 +86,32 @@ void Component::setParameters(const std::map<std::string, float> &inputParams)
 		currentMesh = transformer->transform(first ? baseMesh : currentMesh,
 						     inputParam == inputParams.end() ?
 						     transformer->currentValue :
-						     inputParam->second);
+						     inputParam->second,
+						     Transformer::Self);
 
 		first = false;
+
+		if (children.empty())
+			continue;
+
+		/* apply the transformation on all children as well */
+		std::deque<Component *> queue;
+		queue.push_back(&children[0]);
+
+		while (!queue.empty()) {
+			Component *component = queue.front();
+			queue.pop_front();
+
+			for (Component &child : component->children)
+				queue.push_back(&child);
+
+			component->currentMesh =
+				transformer->transform(component->baseMesh,
+						       inputParam == inputParams.end() ?
+						       transformer->currentValue :
+						       inputParam->second,
+						       Transformer::Child);
+		}
 	}
 
 	moveChildren();
@@ -145,6 +171,9 @@ void Component::render(uint32_t programID, uint32_t textureID)
  * \brief Move the children Components to match the anchors
  *
  * This should be called after any transformation is made to the currentMesh
+ *
+ * It's fine that this is only one level down, as these children will also
+ * shift their children after their own transformations
  */
 void Component::moveChildren()
 {

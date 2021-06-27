@@ -24,7 +24,8 @@ namespace libre2d {
  * \todo confirm that copy elision works
  */
 Mesh TransformerSubstitution::transform([[maybe_unused]] const Mesh &mesh,
-					float param) const
+					float param,
+					[[maybe_unused]] enum TransformWhom whom)
 {
 	if (param <= info->min)
 		return keyMeshes.at(info->min);

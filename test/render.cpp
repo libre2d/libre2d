@@ -8,6 +8,7 @@
 #include <libre2d/component.h>
 #include <libre2d/geometry.h>
 #include <libre2d/model.h>
+#include <libre2d/transformer.h>
 
 #include <GL/glew.h>
 #include <GL/glut.h>
@@ -21,6 +22,7 @@
 using namespace libre2d;
 
 Model model_;
+TransformerRotation rotator_;
 
 std::vector<Vertex> mouthVertices = {
 	Vertex(-0.17241, -0.46835, 1.0),
